@@ -1,6 +1,6 @@
 const {Schema,model} = require('mongoose')
 
-const TaksSchema = Schema({
+const TaskSchema = new Schema({
     descripton: {
         type: String,
         require: true,
@@ -11,6 +11,6 @@ const TaksSchema = Schema({
     }
 })
 
-const TaskModel = model('Taks', TaksSchema)
+const TaskModel = model('Task', TaskSchema)
 
 module.exports = TaskModel
