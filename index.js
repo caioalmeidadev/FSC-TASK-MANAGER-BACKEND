@@ -24,12 +24,24 @@ app.get('/tasks', async (req,res) => {
 app.post('/tasks', async (req,res) => {
     try
     {
+        
         const newTask = new TaskModel(req.body)
     
         await newTask.save()
     
         return res.status(201).send(newTask)
     }catch(error){
+        return res.status(500).send(error.message)
+    }
+})
+
+app.delete('/task/:id', async(req,res) => {
+    try {
+        const taskToDelete = await TaskModel.findById(req.params.id)
+        if(!taskToDelete) return res.status(404).send('tarefa não encontrada')
+        await TaskModel.findByIdAndDelete(req.params.id)
+        return res.status(204).send('deleted!')
+    } catch (error) {
         return res.status(500).send(error.message)
     }
 })
