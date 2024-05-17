@@ -1,4 +1,5 @@
 const TaskModel = require('../models/task.model')
+const {notFoundError} = require('../errors/mongodb.errors')
 
 class TaskController{
     constructor(req,res){
@@ -33,7 +34,7 @@ class TaskController{
     async delete(){
         try {
             const taskToDelete = await TaskModel.findById(req.params.id)
-            if(!taskToDelete) return res.status(404).send('tarefa não encontrada')
+            if(!taskToDelete) return notFoundError(this.res)
             await TaskModel.findByIdAndDelete(req.params.id)
             return res.status(204).send('deleted!')
         } catch (error) {
@@ -44,7 +45,7 @@ class TaskController{
     async getById(){
         try{
             const task = await TaskModel.findById(req.params.id)
-            if(!task) return this.res.status(404).send('task not found')
+            if(!task) return notFoundError(this.res)
             return this.res.status(200).send(task)
         }catch(error){
             return this.res.status(500).send(error.message)
@@ -55,9 +56,23 @@ class TaskController{
         try {
             const taskId = req.params.id
             const taskData = req.body
-            const updatedTask = await TaskModel.findByIdAndUpdate(taskId,taskData)
-    
-            return this.res.status(200).send(updatedTask)
+            
+            const taskToUpdate = await TaskModel.findById(taskId)
+            if(!taskToUpdate) return notFoundError(this.res)
+
+            const allowedUpdates = ["isCompleted"]
+            const requestUpdates = Object.keys(taskData)
+
+            for(const update of requestUpdates){
+                if(allowedUpdates.includes(update)){
+                    taskToUpdate[update] = taskData[update]
+                }else{
+                    return this.res.status(500).send('Um ou mais campos inseridos não são editáveis')
+                }
+            }
+
+            await taskToUpdate.save()
+            return this.res.status(200).send(taskToUpdate)
         } catch (error) {
             return this.res.status(500).send(error.message)
         }
